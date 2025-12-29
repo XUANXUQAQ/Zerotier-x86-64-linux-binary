@@ -41,23 +41,18 @@ jobs:
           echo "ZT_VERSION=$(grep '^ZT_VERSION=' compile.sh | cut -d'=' -f2)" >> $GITHUB_OUTPUT
           echo "ARCH=$(uname -p)" >> $GITHUB_OUTPUT
 
+      - name: Generate tag name
+        id: tag
+        run: |
+          echo "tag_name=v${{ steps.get_version.outputs.ZT_VERSION }}-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ZeroTier ${{ steps.get_version.outputs.ZT_VERSION }} (${{ steps.get_version.outputs.ARCH }})
+          files: ./ZeroTierOne-${{ steps.get_version.outputs.ZT_VERSION }}/zerotier_${{ steps.get_version.outputs.ARCH }}_${{ steps.get_version.outputs.ZT_VERSION }}.tar.gz
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ZeroTierOne-${{ steps.get_version.outputs.ZT_VERSION }}/zerotier_${{ steps.get_version.outputs.ARCH }}_${{ steps.get_version.outputs.ZT_VERSION }}.tar.gz
-          asset_name: zerotier_${{ steps.get_version.outputs.ARCH }}_${{ steps.get_version.outputs.ZT_VERSION }}.tar.gz
-          asset_content_type: application/gzip
