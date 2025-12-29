@@ -1,5 +1,5 @@
 ZT_VERSION=1.16.0
-proxychains wget https://github.com/zerotier/ZeroTierOne/archive/refs/tags/$ZT_VERSION.tar.gz
+wget https://github.com/zerotier/ZeroTierOne/archive/refs/tags/$ZT_VERSION.tar.gz
 tar zxf $ZT_VERSION.tar.gz
 cd ZeroTierOne-$ZT_VERSION
 make -j`nproc` ZT_STATIC=1
