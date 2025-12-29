@@ -1,0 +1,59 @@
+name: Build and Release ZeroTier
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl build-essential pkg-config libssl-dev
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Make compile script executable
+        run: chmod +x compile.sh
+
+      - name: Run compilation
+        run: ./compile.sh
+
+      - name: Get ZeroTier version
+        id: get_version
+        run: |
+          echo "ZT_VERSION=$(grep '^ZT_VERSION=' compile.sh | cut -d'=' -f2)" >> $GITHUB_OUTPUT
+          echo "ARCH=$(uname -p)" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ZeroTierOne-${{ steps.get_version.outputs.ZT_VERSION }}/zerotier_${{ steps.get_version.outputs.ARCH }}_${{ steps.get_version.outputs.ZT_VERSION }}.tar.gz
+          asset_name: zerotier_${{ steps.get_version.outputs.ARCH }}_${{ steps.get_version.outputs.ZT_VERSION }}.tar.gz
+          asset_content_type: application/gzip
