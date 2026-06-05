@@ -1,4 +1,4 @@
-ZT_VERSION=1.16.0
+ZT_VERSION=1.16.2
 wget https://github.com/zerotier/ZeroTierOne/archive/refs/tags/$ZT_VERSION.tar.gz
 tar zxf $ZT_VERSION.tar.gz
 cd ZeroTierOne-$ZT_VERSION
